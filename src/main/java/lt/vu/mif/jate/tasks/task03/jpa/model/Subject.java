@@ -140,7 +140,7 @@ public class Subject implements Serializable {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (!(o instanceof Subject)) return false;
         Subject subject = (Subject) o;
         return Objects.equals(getId(), subject.getId());
     }

@@ -91,9 +91,9 @@ public class Sale {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Sale sale = (Sale) o;
-        return Objects.equals(getId(), sale.getId());
+        if (!(o instanceof Sale)) return false;
+        Sale subject = (Sale) o;
+        return Objects.equals(getId(), subject.getId());
     }
 
     @Override
