@@ -33,6 +33,7 @@ public class Receive extends Thread {
                 long corr = body.getLong();
                 Client.getLOG().info(String.format("%s: received body: %s, correlation = %d",
                         this, resp.name(), corr));
+
                 Message m = Client.getReceive().get(corr);
                 switch (resp) {
                     case Success:
