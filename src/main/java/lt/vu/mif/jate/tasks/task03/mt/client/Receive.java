@@ -15,7 +15,6 @@ public class Receive extends Thread {
                     Client.getIn().read(header.array());
                 } catch (IOException e) {
                     interrupt();
-                    e.printStackTrace();
                     break;
                 }
                 header.rewind();
