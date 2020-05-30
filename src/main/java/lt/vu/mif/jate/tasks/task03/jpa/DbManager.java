@@ -10,38 +10,41 @@ import java.util.List;
 
 public class DbManager implements AutoCloseable {
 
-    private final EntityManager em;
+    private EntityManager em;
 
-    public DbManager() {
-        this.em = Persistence.createEntityManagerFactory("stud").createEntityManager();
+    public EntityManager getEntityManager() {
+        if (em == null) {
+            em = Persistence.createEntityManagerFactory("stud").createEntityManager();
+        }
+        return em;
     }
 
     public <T> List<T> getListOf(Class<T> c) {
-        CriteriaBuilder cb = em.getCriteriaBuilder();
-        CriteriaQuery<T> cq = cb.createQuery(c);
-        Root<T> root = cq.from(c);
-        cq.select(root);
-        TypedQuery<T> q = em.createQuery(cq);
-        return q.getResultList();
+        CriteriaBuilder criteriaBuilder = getEntityManager().getCriteriaBuilder();
+        CriteriaQuery<T> criteriaQuery = criteriaBuilder.createQuery(c);
+        Root<T> root = criteriaQuery.from(c);
+        criteriaQuery.select(root);
+        TypedQuery<T> typedQuery = getEntityManager().createQuery(criteriaQuery);
+        return typedQuery.getResultList();
     }
 
     public <T> List<T> getListOf(Class<T> c, String attribute) {
-        CriteriaBuilder cb = em.getCriteriaBuilder();
-        CriteriaQuery<T> cq = cb.createQuery(c);
-        Root<T> root = cq.from(c);
-        cq.select(root);
-        cq.orderBy(cb.asc(root.get(attribute)));
-        TypedQuery<T> q = em.createQuery(cq);
-        return q.getResultList();
+        CriteriaBuilder criteriaBuilder = getEntityManager().getCriteriaBuilder();
+        CriteriaQuery<T> criteriaQuery = criteriaBuilder.createQuery(c);
+        Root<T> root = criteriaQuery.from(c);
+        criteriaQuery.select(root);
+        criteriaQuery.orderBy(criteriaBuilder.asc(root.get(attribute)));
+        TypedQuery<T> typedQuery = getEntityManager().createQuery(criteriaQuery);
+        return typedQuery.getResultList();
     }
 
     public <T> T getById(Class<T> c, int id) {
-        CriteriaBuilder cb = em.getCriteriaBuilder();
-        CriteriaQuery<T> cq = cb.createQuery(c);
-        Root<T> root = cq.from(c);
-        cq.where(cb.equal(root.get("id"), id));
-        TypedQuery<T> q = em.createQuery(cq);
-        return q.getSingleResult();
+        CriteriaBuilder criteriaBuilder = getEntityManager().getCriteriaBuilder();
+        CriteriaQuery<T> criteriaQuery = criteriaBuilder.createQuery(c);
+        Root<T> root = criteriaQuery.from(c);
+        criteriaQuery.where(criteriaBuilder.equal(root.get("id"), id));
+        TypedQuery<T> typedQuery = getEntityManager().createQuery(criteriaQuery);
+        return typedQuery.getSingleResult();
     }
 
     @Override
