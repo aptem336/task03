@@ -10,6 +10,8 @@ public class Message {
     private final ServerFunction code;
     private final Long correlation;
     private final Long delay;
+    private Long result;
+    private String error;
 
     public Message(ServerFunction code, Long delay) {
         this.code = code;
@@ -45,4 +47,23 @@ public class Message {
         return delay;
     }
 
+    public Long getResult() {
+        return result;
+    }
+
+    public void setResult(Long result) {
+        this.result = result;
+    }
+
+    public String getError() {
+        return error;
+    }
+
+    public void setError(String error) {
+        this.error = error;
+    }
+
+    public boolean isReceived() {
+        return result != null || error != null;
+    }
 }
