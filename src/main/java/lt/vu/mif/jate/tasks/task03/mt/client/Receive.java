@@ -10,22 +10,27 @@ public class Receive extends Thread {
     public void run() {
         while (!Thread.currentThread().isInterrupted()) {
             if (!Client.getReceive().isEmpty()) {
+                boolean success = false;
                 ByteBuffer header = ByteBuffer.allocate(4);
-                try {
-                    Client.getIn().read(header.array());
-                } catch (IOException e) {
-                    interrupt();
-                    break;
-                }
+                do {
+                    try {
+                        Client.getIn().read(header.array());
+                        success = true;
+                    } catch (IOException ignored) {
+                    }
+                } while (!success);
                 header.rewind();
 
-                ByteBuffer body = ByteBuffer.allocate(header.getInt());
-                try {
-                    Client.getIn().read(body.array());
-                } catch (IOException e) {
-                    interrupt();
-                    break;
-                }
+                success = false;
+                ByteBuffer body = null;
+                do {
+                    try {
+                        body = ByteBuffer.allocate(header.getInt());
+                        Client.getIn().read(body.array());
+                        success = true;
+                    } catch (IOException ignored) {
+                    }
+                } while (!success);
                 body.rewind();
 
                 Response resp = Response.fromInt(body.getInt());
