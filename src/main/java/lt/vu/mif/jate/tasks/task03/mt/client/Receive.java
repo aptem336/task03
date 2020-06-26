@@ -3,34 +3,44 @@ package lt.vu.mif.jate.tasks.task03.mt.client;
 import lt.vu.mif.jate.tasks.task03.mt.common.Response;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.ByteBuffer;
+import java.util.concurrent.ConcurrentMap;
 
 public class Receive extends Thread {
+    private final InputStream inputStream;
+    private final ConcurrentMap<Long, Message> receive;
+    private boolean alive;
+
+    public Receive(InputStream inputStream, ConcurrentMap<Long, Message> receive) {
+        this.inputStream = inputStream;
+        this.receive = receive;
+        alive = true;
+    }
+
     @Override
     public void run() {
-        while (!Thread.currentThread().isInterrupted()) {
-            if (!Client.getReceive().isEmpty()) {
-                boolean success = false;
+        while (alive) {
+            if (!receive.isEmpty()) {
                 ByteBuffer header = ByteBuffer.allocate(4);
-                do {
-                    try {
-                        Client.getIn().read(header.array());
-                        success = true;
-                    } catch (IOException ignored) {
-                    }
-                } while (!success);
+                try {
+                    inputStream.read(header.array());
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                    alive = false;
+                    break;
+                }
                 header.rewind();
 
-                success = false;
-                ByteBuffer body = null;
-                do {
-                    try {
-                        body = ByteBuffer.allocate(header.getInt());
-                        Client.getIn().read(body.array());
-                        success = true;
-                    } catch (IOException ignored) {
-                    }
-                } while (!success);
+                ByteBuffer body;
+                try {
+                    body = ByteBuffer.allocate(header.getInt());
+                    inputStream.read(body.array());
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                    alive = false;
+                    break;
+                }
                 body.rewind();
 
                 Response resp = Response.fromInt(body.getInt());
@@ -38,7 +48,7 @@ public class Receive extends Thread {
                 Client.getLOG().info(String.format("%s: received body: %s, correlation = %d",
                         this, resp.name(), corr));
 
-                Message m = Client.getReceive().get(corr);
+                Message m = receive.get(corr);
                 switch (resp) {
                     case Success:
                         m.setResult(body.getLong());
@@ -47,7 +57,7 @@ public class Receive extends Thread {
                         body.get(mb);
                         m.setError(new String(mb));
                 }
-                Client.getReceive().remove(corr);
+                receive.remove(corr);
             }
         }
     }

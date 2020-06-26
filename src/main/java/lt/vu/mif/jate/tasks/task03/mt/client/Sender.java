@@ -1,17 +1,34 @@
 package lt.vu.mif.jate.tasks.task03.mt.client;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.ByteBuffer;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ConcurrentMap;
 
 public class Sender extends Thread {
+
+    private final OutputStream outputStream;
+    private final BlockingQueue<Message> send;
+    private final ConcurrentMap<Long, Message> receive;
+    private boolean alive;
+
+    public Sender(OutputStream outputStream, BlockingQueue<Message> send, ConcurrentMap<Long, Message> receive) {
+        this.outputStream = outputStream;
+        this.send = send;
+        this.receive = receive;
+        alive = true;
+    }
+
     @Override
     public void run() {
-        while (!Thread.currentThread().isInterrupted()) {
+        while (alive) {
             Message m;
             try {
-                m = Client.getSend().take();
+                m = send.take();
             } catch (InterruptedException e) {
-                interrupt();
+                e.printStackTrace();
+                alive = false;
                 break;
             }
             Client.getLOG().info(String.format("%s: about to send: %s, correlation = %d", this, m.getCode().name(), m.getCorrelation()));
@@ -19,13 +36,14 @@ public class Sender extends Thread {
             ByteBuffer bytes = m.toBytes();
             ByteBuffer size = Message.toBytes(bytes.capacity());
             try {
-                Client.getOut().write(size.array());
-                Client.getOut().write(bytes.array());
+                outputStream.write(size.array());
+                outputStream.write(bytes.array());
             } catch (IOException e) {
-                interrupt();
+                e.printStackTrace();
+                alive = false;
                 break;
             }
-            Client.getReceive().put(m.getCorrelation(), m);
+            receive.put(m.getCorrelation(), m);
         }
     }
 }
